@@ -16,9 +16,9 @@ OUTPUT = '''
 Count: %d
 Timeout: %d
 Min: %.3f
-Avg: %.3f
 Max: %.3f
-Std: %.3f
+95%% Percentile: %.3f
+99%% Percentile: %.3f
 '''.strip()
 
 
@@ -108,7 +108,14 @@ def profile(func, n=10, repeat=5):
 
     df = DataFrame(timing)
     print('Test: %s' % func.__name__)
-    print(OUTPUT % (df.count()[0], n_timeout, df.min()[0], df.mean()[0], df.max()[0], df.std()[0]))
+    print(OUTPUT % (
+        df.count()[0],
+        n_timeout,
+        df.min()[0],
+        df.max()[0],
+        df.quantile(0.95)[0],
+        df.quantile(0.99)[0],
+    ))
     print('')
 
 
