@@ -20,7 +20,7 @@ Std: %.3f
 '''.strip()
 
 
-def create_new_convs(n, unique=True):
+def profile_create_new_convs(n, unique=True):
     for i in range(n):
         start = time()
         try:
@@ -30,11 +30,11 @@ def create_new_convs(n, unique=True):
             yield nan
 
 
-create_new_convs_not_unique = partial(create_new_convs, unique=False)
-create_new_convs_not_unique.__name__ = 'create_new_convs_not_unique'
+profile_create_new_convs_not_unique = partial(profile_create_new_convs, unique=False)
+profile_create_new_convs_not_unique.__name__ = 'profile_create_new_convs_not_unique'
 
 
-def create_existing_convs(n, unique=True):
+def profile_create_existing_convs(n, unique=True):
     names = {}
 
     for i in range(n):
@@ -55,8 +55,30 @@ def create_existing_convs(n, unique=True):
             yield nan
 
 
-create_existing_convs_not_unique = partial(create_existing_convs, unique=False)
-create_existing_convs_not_unique.__name__ = 'create_existing_convs_not_unique'
+profile_create_existing_convs_not_unique = partial(profile_create_existing_convs, unique=False)
+profile_create_existing_convs_not_unique.__name__ = 'profile_create_existing_convs_not_unique'
+
+
+def profile_update_convs(n):
+    convs = {}
+
+    for i in range(n):
+        try:
+            conv = Conversation.create('conv-for-test-%d' % i, members=[])
+            convs[i] = conv
+        except Timeout:
+            pass
+
+    # not dict iter because we need to check for absent values (Timeout)
+    for i in range(n):
+        start = time()
+
+        try:
+            conv = convs[i]
+            conv.ensure_members(['somebody'])
+            yield time() - start
+        except (KeyError, Timeout):
+            yield nan
 
 
 def profile(func, n=10, repeat=5):
@@ -78,13 +100,12 @@ def profile(func, n=10, repeat=5):
 def main():
     init(environ.get('LC_APP_ID'), master_key=environ.get('LC_MASTER_KEY'))
 
+    func_name = environ.get('FUNC', 'create_new_convs')
+    func = globals()['profile_%s' % func_name]
     n = int(environ.get('NUMBER', 10))
     repeat = int(environ.get('REPEAT', 5))
 
-    profile(create_new_convs_not_unique, n, repeat)
-    profile(create_new_convs, n, repeat)
-    profile(create_existing_convs_not_unique, n, repeat)
-    profile(create_existing_convs, n, repeat)
+    profile(func, n, repeat)
 
 
 if __name__ == "__main__":
