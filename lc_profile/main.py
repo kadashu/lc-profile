@@ -83,21 +83,17 @@ def profile_update_convs(n):
             yield nan
 
 
-def profile_send_messages(n, recipients=None):
-    conv = Conversation.create('conv-for-msg-test', members=recipients or [])
+def profile_send_messages(n):
+    conv = Conversation.create('conv-for-msg-test', members=['lc-profile-listener'])
 
     for i in range(n):
         start = time()
 
         try:
-            send_message(conv.id, 'lc-profiler', { 'content': time() })
+            send_message(conv.id, 'lc-profiler', {})
             yield time() - start
         except Timeout:
             yield nan
-
-
-profile_send_messages_with_members = partial(profile_send_messages, recipients=['lc-profiler-listener'])
-profile_send_messages_with_members.__name__ = 'profile_send_messages_with_members'
 
 
 def profile(func, n=10, repeat=5):

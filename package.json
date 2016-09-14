@@ -1,0 +1,11 @@
+{
+  "name": "leancloud-profile",
+  "description": "LeanCloud Profiling",
+  "version": "0.1.0",
+  "private": "true",
+  "author": "Limbo Peng <iwinux@gmail.com>",
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "leancloud-realtime": "^3.2.3"
+  }
+}
