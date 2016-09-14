@@ -1,6 +1,7 @@
 from functools import partial
 from os import environ
 from time import time
+import sys
 
 from leancloud import init
 from numpy import isnan, nan
@@ -8,6 +9,7 @@ from pandas import DataFrame
 from requests import Timeout
 
 from .conversation import Conversation
+from .message import send_message
 
 
 OUTPUT = '''
@@ -81,6 +83,23 @@ def profile_update_convs(n):
             yield nan
 
 
+def profile_send_messages(n, recipients=None):
+    conv = Conversation.create('conv-for-msg-test', members=recipients or [])
+
+    for i in range(n):
+        start = time()
+
+        try:
+            send_message(conv.id, 'lc-profiler', { 'content': time() })
+            yield time() - start
+        except Timeout:
+            yield nan
+
+
+profile_send_messages_with_members = partial(profile_send_messages, recipients=['lc-profiler-listener'])
+profile_send_messages_with_members.__name__ = 'profile_send_messages_with_members'
+
+
 def profile(func, n=10, repeat=5):
     timing = []
     n_timeout = 0
@@ -100,10 +119,19 @@ def profile(func, n=10, repeat=5):
 def main():
     init(environ.get('LC_APP_ID'), master_key=environ.get('LC_MASTER_KEY'))
 
-    func_name = environ.get('FUNC', 'create_new_convs')
-    func = globals()['profile_%s' % func_name]
+    func_name = environ.get('FUNC')
+    func = globals().get('profile_%s' % func_name)
     n = int(environ.get('NUMBER', 10))
     repeat = int(environ.get('REPEAT', 5))
+
+    if not func:
+        print('Available Tests:')
+        print('\n'.join(
+            name[len('profile_'):]
+            for name in globals().keys()
+            if name.startswith('profile_')
+        ))
+        sys.exit(1)
 
     profile(func, n, repeat)
 
