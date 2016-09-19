@@ -14,7 +14,12 @@ result = { 'stdout' => [] }
 failed = 0
 tasks  = {
   'ping' => { 'method' => 'GET', 'path' => 'ping', 'accpet_http_code' => /^200$/ },
-  'create_conversation' => { 'method' => 'POST', 'path' => 'classes/_Conversation', 'data' => '{"name":"My Private Room in Test","m":[]}', 'accept_http_code' => /^2[0-9]+$/, 'auth' => true, 'json' => true }
+  'create_conversation' => { 'method' => 'POST',
+                             'path' => 'classes/_Conversation',
+                             'data' => '{"name":"My Private Room in Test","m":[]}',
+                             'accept_http_code' => /^2[0-9]+$/,
+                             'auth' => true,
+                             'json' => true }
 }
 
 puts "count #{count}"
@@ -24,7 +29,15 @@ if not tasks.has_key? task
 end
 
 def format_cmd( ctask)
-  cmd = "curl -s -X #{ctask['method']} -w 'nslookup: %{time_namelookup}, connect: %{time_connect}, init_ssl: %{time_appconnect}, pretransfer: %{time_pretransfer}, starttransfer: %{time_starttransfer}, total_time: %{time_total}, http_code: %{http_code} \n' https://api.leancloud.cn/1.1/#{ctask['path']} -o /dev/null"
+  cmd = "curl -s -X #{ctask['method']} \
+         -w 'nslookup: %{time_namelookup}, \
+             connect: %{time_connect}, \
+             init_ssl: %{time_appconnect}, \
+             pretransfer: %{time_pretransfer}, \
+             starttransfer: %{time_starttransfer}, \
+             total_time: %{time_total}, \
+             http_code: %{http_code} \n' \
+         https://api.leancloud.cn/1.1/#{ctask['path']} -o /dev/null"
   cmd = cmd + " -d '#{ctask['data']}'" if ctask.has_key? 'data'
   cmd = cmd + ' -H "Content-Type: application/json"' if ctask['json'] == true
   cmd = cmd + " -H 'X-LC-Id: #{LC_APP_ID}' -H 'X-LC-Key: #{LC_MASTER_KEY}'" if ctask['auth'] == true
