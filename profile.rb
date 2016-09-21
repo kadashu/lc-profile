@@ -36,6 +36,7 @@ def format_cmd( ctask)
              pretransfer: %{time_pretransfer}, \
              starttransfer: %{time_starttransfer}, \
              total_time: %{time_total}, \
+             remote_ip: %{remote_ip}, \
              http_code: %{http_code} \n' \
          https://api.leancloud.cn/1.1/#{ctask['path']} -o /dev/null"
   cmd = cmd + " -d '#{ctask['data']}'" if ctask.has_key? 'data'
@@ -58,7 +59,7 @@ count.downto 1 do | x |
     end
     result['stdout'].push( out.chomp.gsub(' ','') )
     frag.each do | k, v |
-      next if k == 'http_code'
+      next if k =~ /(http_code|remote_ip)/
       result[ k ] = [] if not result.has_key? k
       result[ k ].push( v )
     end
@@ -77,5 +78,5 @@ result.map { | k, v | puts "
  mean: #{v.mean}
  p90:  #{v.percentile(90)}
  p95:  #{v.percentile(95)}
- p99:  #{v.percentile(99)}" if k !~ /(http_code|stdout)/
+ p99:  #{v.percentile(99)}" if k !~ /(http_code|stdout|remote_ip)/
 }
