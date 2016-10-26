@@ -19,7 +19,10 @@ tasks  = {
                              'data' => '{"name":"My Private Room in Test","m":[]}',
                              'accept_http_code' => /^2[0-9]+$/,
                              'auth' => true,
-                             'json' => true }
+                             'json' => true },
+  'ping_router' => { 'method' => 'GET',
+                     'url' => "http://router-g0-push.leancloud.cn/v1/route?appId=#{LC_APP_ID}&ip=true&secure=1"
+                  }
 }
 
 puts "count #{count}"
@@ -37,8 +40,12 @@ def format_cmd( ctask)
              starttransfer: %{time_starttransfer}, \
              total_time: %{time_total}, \
              remote_ip: %{remote_ip}, \
-             http_code: %{http_code} \n' \
-         https://api.leancloud.cn/1.1/#{ctask['path']} -o /dev/null"
+             http_code: %{http_code} \n' "
+  if ctask.has_key? 'url'
+    cmd += "'#{ctask['url']}' -o /dev/null"
+  else
+    cmd += "https://api.leancloud.cn/1.1/#{ctask['path']} -o /dev/null"
+  end
   cmd = cmd + " -d '#{ctask['data']}'" if ctask.has_key? 'data'
   cmd = cmd + ' -H "Content-Type: application/json"' if ctask['json'] == true
   cmd = cmd + " -H 'X-LC-Id: #{LC_APP_ID}' -H 'X-LC-Key: #{LC_MASTER_KEY}'" if ctask['auth'] == true
